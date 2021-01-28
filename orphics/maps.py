@@ -10,6 +10,28 @@ from scipy.interpolate import RectBivariateSpline,interp2d,interp1d
 import warnings
 import healpy as hp
 
+
+def get_ft_attributes(shape,wcs):
+     shape = shape[-2:]
+     Ny, Nx = shape
+     pixScaleY, pixScaleX = enmap.pixshape(shape,wcs)
+
+     lx =  2*np.pi  * np.fft.fftfreq( Nx, d = pixScaleX )
+     ly =  2*np.pi  * np.fft.fftfreq( Ny, d = pixScaleY )
+
+     ix = np.mod(np.arange(Nx*Ny),Nx)
+     iy = np.arange(Nx*Ny)//Nx
+
+     modlmap = enmap.modlmap(shape,wcs)
+
+     theta_map = np.zeros([Ny,Nx])
+     theta_map[iy[:],ix[:]] = np.arctan2(ly[iy[:]],lx[ix[:]])
+
+     lxMap, lyMap = np.meshgrid(lx, ly)  # is this the right order?
+
+     return lxMap,lyMap,modlmap,theta_map,lx,ly
+
+
 def mask_srcs(shape,wcs,srcs_deg,width_arcmin):
     r = np.deg2rad(width_arcmin/60.)
     return enmap.distance_from(shape,wcs,np.deg2rad(srcs_deg), rmax=r) >= r
